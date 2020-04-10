@@ -474,6 +474,7 @@ class Applicant(models.Model):
                             and applicant.department_id.company_id.email or False,
                     'work_phone': applicant.department_id and applicant.department_id.company_id
                             and applicant.department_id.company_id.phone or False})
+                self.populate_new_employee(employee)
                 applicant.write({'emp_id': employee.id})
                 if applicant.job_id:
                     applicant.job_id.write({'no_of_hired_employee': applicant.job_id.no_of_hired_employee + 1})
@@ -490,6 +491,21 @@ class Applicant(models.Model):
         dict_act_window['context'] = {'form_view_initial_mode': 'edit'}
         dict_act_window['res_id'] = employee.id
         return dict_act_window
+
+    def populate_new_employee(self, employee):
+        employee['x_diet'] = self['x_diet']
+        employee['x_gender'] = self['x_gender']
+        employee['work_email'] = self['email_from']
+        employee['x_address_city'] = self['x_address_city']
+        employee['x_birth_year'] = self['x_birth_year']
+        employee['work_phone'] = self['partner_mobile']
+        if self['x_department']:
+            department = self.get_department_by_name(self['x_department'])
+            if department:
+                employee['department_id'] = department.id
+
+    def get_department_by_name(self, department_name):
+        return self.env['hr.department'].search([("name", "=", department_name)])
 
     def archive_applicant(self):
         self.write({'active': False})
